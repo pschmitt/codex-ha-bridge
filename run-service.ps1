@@ -45,9 +45,12 @@ try {
     exit 1
   }
 
-  Write-BridgeLog "Starting bridge. Node: $NodePath"
-  & $NodePath "src\index.js" >> $LogFile 2>&1
-  Write-BridgeLog "Bridge stopped."
+  while ($true) {
+    Write-BridgeLog "Starting bridge. Node: $NodePath"
+    & $NodePath "src\index.js" >> $LogFile 2>&1
+    Write-BridgeLog "Bridge stopped. Restarting in 30 seconds."
+    Start-Sleep -Seconds 30
+  }
 } catch {
   Write-BridgeLog "Error: $($_.Exception.Message)"
   exit 1

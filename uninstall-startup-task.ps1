@@ -1,0 +1,13 @@
+$ErrorActionPreference = "Stop"
+
+$StartupFolder = [Environment]::GetFolderPath("Startup")
+$ShortcutPath = Join-Path $StartupFolder "Codex Home Assistant MQTT Bridge.lnk"
+
+if (Test-Path $ShortcutPath) {
+  Remove-Item $ShortcutPath
+  Write-Host "Startup shortcut removed."
+} else {
+  Write-Host "No startup shortcut was found."
+}
+
+Read-Host "Press Enter to close"

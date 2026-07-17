@@ -8,7 +8,13 @@ const SENSOR_DEFS = [
     "%",
     "mdi:calendar-check",
   ],
-  ["secondary_reset_time", "Codex Weekly Reset", null, "mdi:calendar-clock"],
+  [
+    "secondary_reset_time",
+    "Codex Weekly Reset",
+    null,
+    "mdi:calendar-clock",
+    "timestamp",
+  ],
   ["credits_balance", "Codex Credits", "credits", "mdi:cash"],
   ["plan", "Codex Plan", null, "mdi:account-badge"],
   ["rate_limit_reached_type", "Codex Limit Status", null, "mdi:alert-circle"],
@@ -51,7 +57,7 @@ export async function publishDiscovery(client, config) {
     await publish(client, discoveryTopic(config, key), "", true);
   }
 
-  for (const [key, name, unit, icon] of SENSOR_DEFS) {
+  for (const [key, name, unit, icon, deviceClass] of SENSOR_DEFS) {
     const payload = {
       name,
       unique_id: `${config.device.id}_${key}`,
@@ -64,6 +70,7 @@ export async function publishDiscovery(client, config) {
     };
 
     if (unit) payload.unit_of_measurement = unit;
+    if (deviceClass) payload.device_class = deviceClass;
 
     await publish(client, discoveryTopic(config, key), payload, true);
   }

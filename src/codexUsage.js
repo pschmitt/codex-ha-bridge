@@ -24,23 +24,13 @@ function firstSome(...values) {
   return values.find((value) => value !== undefined && value !== null);
 }
 
-function formatResetTime(epochSeconds, includeDate) {
+function formatResetTime(epochSeconds) {
   if (!epochSeconds) return null;
 
   const date = new Date(Number(epochSeconds) * 1000);
   if (Number.isNaN(date.getTime())) return null;
 
-  const time = new Intl.DateTimeFormat("tr-TR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).format(date);
-
-  if (!includeDate) return time;
-
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${day}/${month} - ${time}`;
+  return date.toISOString();
 }
 
 function normalizeLimitStatus(status) {
@@ -118,13 +108,13 @@ export function flattenForMqtt(snapshot) {
     primary_remaining_percent: snapshot.primary?.remaining_percent ?? null,
     primary_window_minutes: snapshot.primary?.window_minutes ?? null,
     primary_reset_at: snapshot.primary?.reset_at ?? null,
-    primary_reset_time: formatResetTime(snapshot.primary?.reset_at, false),
+    primary_reset_time: formatResetTime(snapshot.primary?.reset_at),
     primary_reset_after_seconds: snapshot.primary?.reset_after_seconds ?? null,
     secondary_used_percent: snapshot.secondary?.used_percent ?? null,
     secondary_remaining_percent: snapshot.secondary?.remaining_percent ?? null,
     secondary_window_minutes: snapshot.secondary?.window_minutes ?? null,
     secondary_reset_at: snapshot.secondary?.reset_at ?? null,
-    secondary_reset_time: formatResetTime(snapshot.secondary?.reset_at, true),
+    secondary_reset_time: formatResetTime(snapshot.secondary?.reset_at),
     secondary_reset_after_seconds:
       snapshot.secondary?.reset_after_seconds ?? null,
     credits_has_credits: snapshot.credits?.has_credits ?? false,

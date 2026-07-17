@@ -48,14 +48,25 @@ function normalizeLimitStatus(status) {
   return status;
 }
 
+function normalizeWindows(primary, secondary) {
+  const windows = [primary, secondary].filter(Boolean);
+  const weekly = windows.find((window) => window.window_minutes >= 10080);
+
+  return {
+    primary: windows.find((window) => window !== weekly) ?? null,
+    secondary: weekly ?? null,
+  };
+}
+
 function normalizeSnapshot(payload) {
   const rateLimit = payload.rate_limit ?? payload.rateLimits ?? {};
-  const primary = normalizeWindow(
+  const apiPrimary = normalizeWindow(
     firstSome(rateLimit.primary_window, rateLimit.primary),
   );
-  const secondary = normalizeWindow(
+  const apiSecondary = normalizeWindow(
     firstSome(rateLimit.secondary_window, rateLimit.secondary),
   );
+  const { primary, secondary } = normalizeWindows(apiPrimary, apiSecondary);
 
   return {
     source: "codex_backend",

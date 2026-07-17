@@ -1,9 +1,6 @@
 import { SimpleMqttClient } from "./simpleMqtt.js";
 
 const SENSOR_DEFS = [
-  ["primary_used_percent", "Codex 5h Used", "%", "mdi:timer-sand"],
-  ["primary_remaining_percent", "Codex 5h Remaining", "%", "mdi:timer-outline"],
-  ["primary_reset_time", "Codex 5h Reset", null, "mdi:clock-outline"],
   ["secondary_used_percent", "Codex Weekly Used", "%", "mdi:calendar-week"],
   [
     "secondary_remaining_percent",
@@ -15,6 +12,12 @@ const SENSOR_DEFS = [
   ["credits_balance", "Codex Credits", "credits", "mdi:cash"],
   ["plan", "Codex Plan", null, "mdi:account-badge"],
   ["rate_limit_reached_type", "Codex Limit Status", null, "mdi:alert-circle"],
+];
+
+const RETIRED_SENSOR_KEYS = [
+  "primary_used_percent",
+  "primary_remaining_percent",
+  "primary_reset_time",
 ];
 
 export function createMqttClient(config) {
@@ -43,6 +46,10 @@ export async function publishDiscovery(client, config) {
     manufacturer: "OpenAI",
     model: "Codex Usage Bridge",
   };
+
+  for (const key of RETIRED_SENSOR_KEYS) {
+    await publish(client, discoveryTopic(config, key), "", true);
+  }
 
   for (const [key, name, unit, icon] of SENSOR_DEFS) {
     const payload = {

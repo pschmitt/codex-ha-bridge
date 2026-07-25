@@ -17,10 +17,16 @@ let discoveryPublished = false;
 let running = false;
 let lastPublishedState = null;
 
-// captured_at always changes, so it's excluded when deciding whether the
-// state is meaningfully different from what was last published.
+// captured_at and the *_reset_after_seconds countdowns change on every poll
+// by design, so they're excluded when deciding whether the state is
+// meaningfully different from what was last published.
 function significantState(state) {
-  const { captured_at, ...rest } = state;
+  const {
+    captured_at,
+    primary_reset_after_seconds,
+    secondary_reset_after_seconds,
+    ...rest
+  } = state;
   return rest;
 }
 

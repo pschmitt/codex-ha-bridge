@@ -30,6 +30,10 @@ function formatResetTime(epochSeconds) {
   const date = new Date(Number(epochSeconds) * 1000);
   if (Number.isNaN(date.getTime())) return null;
 
+  // Round to the minute so sub-minute jitter in the upstream reset estimate
+  // doesn't produce a "new" value on every poll.
+  date.setSeconds(0, 0);
+
   return date.toISOString();
 }
 

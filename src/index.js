@@ -15,6 +15,22 @@ const client = createMqttClient(config.mqtt);
 
 let discoveryPublished = false;
 let running = false;
+let lastPublishedState = null;
+
+// captured_at always changes, so it's excluded when deciding whether the
+// state is meaningfully different from what was last published.
+function significantState(state) {
+  const { captured_at, ...rest } = state;
+  return rest;
+}
+
+function hasChanged(previous, next) {
+  if (!previous) return true;
+  return (
+    JSON.stringify(significantState(previous)) !==
+    JSON.stringify(significantState(next))
+  );
+}
 
 client.on("connect", async () => {
   console.log("MQTT connected.");
@@ -45,10 +61,16 @@ async function pollOnce() {
     const usage = await fetchCodexUsage(config.codex);
     const state = flattenForMqtt(usage);
     await publishAvailability(client, config, "online");
-    await publishState(client, config, state);
-    console.log(
-      `Published Codex usage: 5h ${state.primary_used_percent ?? "?"}% used, weekly ${state.secondary_used_percent ?? "?"}% used.`,
-    );
+
+    if (hasChanged(lastPublishedState, state)) {
+      await publishState(client, config, state);
+      lastPublishedState = state;
+      console.log(
+        `Published Codex usage: 5h ${state.primary_used_percent ?? "?"}% used, weekly ${state.secondary_used_percent ?? "?"}% used.`,
+      );
+    } else {
+      console.log("Codex usage unchanged, skipping publish.");
+    }
   } catch (error) {
     await publishAvailability(client, config, "offline").catch(() => {});
     console.error(`Poll failed: ${error.message}`);

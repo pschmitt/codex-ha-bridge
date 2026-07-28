@@ -18,6 +18,12 @@ const SENSOR_DEFS = [
   ["credits_balance", "Codex Credits", "credits", "mdi:cash"],
   ["plan", "Codex Plan", null, "mdi:account-badge"],
   ["rate_limit_reached_type", "Codex Limit Status", null, "mdi:alert-circle"],
+  [
+    "reset_credits_available",
+    "Codex Reset Tickets",
+    "tickets",
+    "mdi:ticket-confirmation-outline",
+  ],
 ];
 
 const RETIRED_SENSOR_KEYS = [

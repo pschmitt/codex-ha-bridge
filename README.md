@@ -19,6 +19,7 @@ It is designed to be lightweight: there are no npm package dependencies, and the
   - `Codex 5h Reset`: `16:49`
   - `Codex Weekly Reset`: `12/05 - 09:01`
 - Publishes plan, credits, and limit status.
+- Publishes banked rate-limit reset tickets (`rate_limit_reset_credits`).
 - Runs without npm dependencies.
 - Includes Windows startup helpers that run silently in the background.
 
@@ -51,6 +52,7 @@ The bridge publishes these sensors:
 | `Codex Credits` | `0 credits` |
 | `Codex Plan` | `plus` |
 | `Codex Limit Status` | `OK` |
+| `Codex Reset Tickets` | `2 tickets` |
 
 All sensor values come from the retained JSON state payload on `codex/usage/state`, with bridge availability published on `codex/usage/availability`.
 

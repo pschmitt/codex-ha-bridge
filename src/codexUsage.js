@@ -82,6 +82,18 @@ function normalizeSnapshot(payload) {
       payload.rate_limit_reached_type?.kind ??
       payload.rate_limit_reached_type ??
       null,
+    reset_credits: normalizeResetCredits(
+      firstSome(payload.rate_limit_reset_credits, payload.rateLimitResetCredits),
+    ),
+  };
+}
+
+function normalizeResetCredits(resetCredits) {
+  if (!resetCredits) return null;
+
+  return {
+    available: resetCredits.available_count ?? null,
+    applicable_available: resetCredits.applicable_available_count ?? null,
   };
 }
 
@@ -127,5 +139,8 @@ export function flattenForMqtt(snapshot) {
     rate_limit_reached_type: normalizeLimitStatus(
       snapshot.rate_limit_reached_type,
     ),
+    reset_credits_available: snapshot.reset_credits?.available ?? null,
+    reset_credits_applicable_available:
+      snapshot.reset_credits?.applicable_available ?? null,
   };
 }

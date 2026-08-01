@@ -55,6 +55,9 @@ export function loadConfig() {
       backendUrl:
         process.env.CODEX_BACKEND_URL ||
         "https://chatgpt.com/backend-api/wham/usage",
+      resetCreditsUrl:
+        process.env.CODEX_RESET_CREDITS_URL ||
+        "https://chatgpt.com/backend-api/wham/rate-limit-reset-credits",
       refreshUrl:
         process.env.CODEX_REFRESH_TOKEN_URL ||
         "https://auth.openai.com/oauth/token",

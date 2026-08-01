@@ -52,7 +52,7 @@ function normalizeWindows(primary, secondary) {
   };
 }
 
-function normalizeSnapshot(payload) {
+function normalizeSnapshot(payload, resetCreditDetails) {
   const rateLimit = payload.rate_limit ?? payload.rateLimits ?? {};
   const apiPrimary = normalizeWindow(
     firstSome(rateLimit.primary_window, rateLimit.primary),
@@ -84,17 +84,48 @@ function normalizeSnapshot(payload) {
       null,
     reset_credits: normalizeResetCredits(
       firstSome(payload.rate_limit_reset_credits, payload.rateLimitResetCredits),
+      resetCreditDetails,
     ),
   };
 }
 
-function normalizeResetCredits(resetCredits) {
-  if (!resetCredits) return null;
+function normalizeResetCredit(credit) {
+  return {
+    status: credit.status ?? null,
+    title: credit.title ?? null,
+    description: credit.description ?? null,
+    reset_type: credit.reset_type ?? credit.resetType ?? null,
+    granted_at: credit.granted_at ?? credit.grantedAt ?? null,
+    expires_at: credit.expires_at ?? credit.expiresAt ?? null,
+  };
+}
+
+function normalizeResetCredits(resetCredits, resetCreditDetails) {
+  if (!resetCredits && !resetCreditDetails) return null;
+
+  const details = Array.isArray(resetCreditDetails?.credits)
+    ? resetCreditDetails.credits.map(normalizeResetCredit)
+    : null;
 
   return {
-    available: resetCredits.available_count ?? null,
-    applicable_available: resetCredits.applicable_available_count ?? null,
+    available:
+      resetCredits?.available_count ?? resetCreditDetails?.available_count ?? null,
+    applicable_available: resetCredits?.applicable_available_count ?? null,
+    credits: details,
   };
+}
+
+async function fetchResetCreditDetails(config, headers) {
+  const res = await fetch(config.resetCreditsUrl, {
+    headers: {
+      ...headers,
+      Accept: "application/json",
+      "OAI-Product-Sku": "CODEX",
+      originator: "Codex Desktop",
+    },
+  });
+  if (!res.ok) return null;
+  return res.json();
 }
 
 export async function fetchCodexUsage(config) {
@@ -106,13 +137,18 @@ export async function fetchCodexUsage(config) {
 
   if (auth.accountId) headers["ChatGPT-Account-Id"] = auth.accountId;
 
-  const res = await fetch(config.backendUrl, { headers });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Codex usage request failed: HTTP ${res.status} ${body}`);
+  const [usageResponse, resetCreditDetails] = await Promise.all([
+    fetch(config.backendUrl, { headers }),
+    fetchResetCreditDetails(config, headers).catch(() => null),
+  ]);
+  if (!usageResponse.ok) {
+    const body = await usageResponse.text().catch(() => "");
+    throw new Error(
+      `Codex usage request failed: HTTP ${usageResponse.status} ${body}`,
+    );
   }
 
-  return normalizeSnapshot(await res.json());
+  return normalizeSnapshot(await usageResponse.json(), resetCreditDetails);
 }
 
 export function flattenForMqtt(snapshot) {
@@ -142,5 +178,6 @@ export function flattenForMqtt(snapshot) {
     reset_credits_available: snapshot.reset_credits?.available ?? null,
     reset_credits_applicable_available:
       snapshot.reset_credits?.applicable_available ?? null,
+    reset_credits: snapshot.reset_credits?.credits ?? null,
   };
 }

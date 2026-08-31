@@ -44,9 +44,10 @@ function connectPacket(options) {
     payload.push(encodeString(options.password));
   }
 
+  const keepalive = options.keepalive ?? 60;
   const variableHeader = Buffer.concat([
     encodeString("MQTT"),
-    Buffer.from([4, flags, 0, 60]),
+    Buffer.from([4, flags, keepalive >> 8, keepalive & 0xff]),
   ]);
 
   return packet(0x10, variableHeader, Buffer.concat(payload));
@@ -55,6 +56,10 @@ function connectPacket(options) {
 function publishPacket(topic, message, retain) {
   const fixedHeader = retain ? 0x31 : 0x30;
   return packet(fixedHeader, encodeString(topic), Buffer.from(message, "utf8"));
+}
+
+function pingPacket() {
+  return Buffer.from([0xc0, 0x00]);
 }
 
 export class SimpleMqttClient extends EventEmitter {
@@ -68,6 +73,8 @@ export class SimpleMqttClient extends EventEmitter {
     this.queue = [];
     this.connected = false;
     this.ended = false;
+    this.keepalive = options.keepalive ?? 60;
+    this.keepaliveTimer = null;
     this.connect();
   }
 
@@ -90,6 +97,7 @@ export class SimpleMqttClient extends EventEmitter {
       if (packetType === 2 && chunk[3] === 0) {
         this.socket.setTimeout(0);
         this.connected = true;
+        this.startKeepalive();
         this.emit("connect");
         this.flush();
       } else if (packetType === 2 && chunk[3] !== 0) {
@@ -103,9 +111,26 @@ export class SimpleMqttClient extends EventEmitter {
 
     this.socket.on("error", (error) => this.emit("error", error));
     this.socket.on("close", () => {
+      this.stopKeepalive();
       this.connected = false;
       if (!this.ended) setTimeout(() => this.connect(), 5000);
     });
+  }
+
+  startKeepalive() {
+    this.stopKeepalive();
+    this.keepaliveTimer = setInterval(() => {
+      if (this.connected && this.socket && !this.socket.destroyed) {
+        this.socket.write(pingPacket());
+      }
+    }, this.keepalive * 500);
+  }
+
+  stopKeepalive() {
+    if (this.keepaliveTimer) {
+      clearInterval(this.keepaliveTimer);
+      this.keepaliveTimer = null;
+    }
   }
 
   publish(topic, message, options = {}, callback = () => {}) {
@@ -130,6 +155,7 @@ export class SimpleMqttClient extends EventEmitter {
   }
 
   end() {
+    this.stopKeepalive();
     this.ended = true;
     if (this.socket && !this.socket.destroyed) {
       this.socket.write(Buffer.from([0xe0, 0x00]));

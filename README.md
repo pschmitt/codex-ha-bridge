@@ -86,6 +86,29 @@ codex/usage/availability
 
 The Windows helper scripts can also use the Node.js runtime bundled with the Codex desktop app when it is available.
 
+## Nix flake and Home Manager
+
+The repository provides a Nix flake with a `packages.<system>.default` package
+and a `homeManagerModules.default` module. Add it as an input:
+
+```nix
+codex-ha-bridge = {
+  url = "github:pschmitt/codex-ha-bridge";
+  inputs.nixpkgs.follows = "nixpkgs";
+};
+```
+
+Import the Home Manager module on the machine that should run the bridge:
+
+```nix
+imports = [ inputs.codex-ha-bridge.homeManagerModules.default ];
+```
+
+The module expects the SOPS secret `codex-ha-bridge/env` to contain the
+runtime environment (`MQTT_URL`, `MQTT_USERNAME`, `MQTT_PASSWORD`, and
+`POLL_SECONDS`). It installs and enables a user service that runs the flake's
+package and restarts it if it exits.
+
 ---
 
 ## Quick start on Windows
@@ -290,10 +313,12 @@ severity:
 
 ## Development / validation
 
-This project has no npm dependencies. To validate JavaScript syntax:
+This project has no npm dependencies. To validate JavaScript syntax and run the
+MQTT client regression test:
 
 ```powershell
 npm run check
+npm test
 ```
 
 The check script runs `node --check` against the source files.

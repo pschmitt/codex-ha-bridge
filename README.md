@@ -104,10 +104,34 @@ Import the Home Manager module on the machine that should run the bridge:
 imports = [ inputs.codex-ha-bridge.homeManagerModules.default ];
 ```
 
-The module expects the SOPS secret `codex-ha-bridge/env` to contain the
-runtime environment (`MQTT_URL`, `MQTT_USERNAME`, `MQTT_PASSWORD`, and
-`POLL_SECONDS`). It installs and enables a user service that runs the flake's
-package and restarts it if it exits.
+The module provides the usual `enable`, `environmentFile`, and `environment`
+options. It does not require SOPS or any particular secret name. The
+environment file is optional and uses systemd `EnvironmentFile` syntax:
+
+```nix
+services.codex-ha-bridge = {
+  enable = true;
+  environmentFile = "/run/user/1000/secrets/codex-ha-bridge.env";
+};
+```
+
+For non-secret values, environment variables can be declared directly:
+
+```nix
+services.codex-ha-bridge = {
+  enable = true;
+  environment = {
+    MQTT_URL = "mqtt://homeassistant.local:1883";
+    MQTT_USERNAME = "ha_demo_user";
+    POLL_SECONDS = "60";
+  };
+};
+```
+
+Both options can be used together; inline values override variables with the
+same name from `environmentFile`. Use `environmentFile` for passwords and
+tokens because inline values are included in the generated Home Manager
+configuration.
 
 ---
 

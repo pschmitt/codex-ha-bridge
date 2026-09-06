@@ -24,6 +24,7 @@ const SENSOR_DEFS = [
     "mdi:calendar-clock",
     "timestamp",
   ],
+  ["secondary_usage_pace", "Codex Weekly Usage Pace", "%", "mdi:speedometer"],
   ["credits_balance", "Codex Credits", "credits", "mdi:cash"],
   ["plan", "Codex Plan", null, "mdi:account-badge"],
   ["rate_limit_reached_type", "Codex Limit Status", null, "mdi:alert-circle"],

@@ -14,6 +14,7 @@ It is designed to be lightweight: there are no npm package dependencies, and inc
 - Creates Home Assistant sensors automatically with MQTT Discovery.
 - Tracks 5-hour usage and remaining percentage.
 - Tracks weekly usage and remaining percentage.
+- Tracks weekly usage pace (percent used minus percent of the week elapsed).
 - Publishes retained state and availability topics for reliable Home Assistant restarts.
 - Publishes reset times:
   - `Codex 5h Reset`: `16:49`
@@ -50,6 +51,7 @@ The bridge publishes these sensors:
 | `Codex Weekly Used` | `8%` |
 | `Codex Weekly Remaining` | `92%` |
 | `Codex Weekly Reset` | `12/05 - 09:01` |
+| `Codex Weekly Usage Pace` | `-4%` |
 | `Codex Credits` | `0 credits` |
 | `Codex Plan` | `plus` |
 | `Codex Limit Status` | `OK` |

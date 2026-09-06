@@ -37,6 +37,31 @@ function formatResetTime(epochSeconds) {
   return date.toISOString();
 }
 
+function computeUsagePace(window) {
+  // Percent used minus percent of the reset window already elapsed: positive
+  // means burning the quota faster than a level pace, negative means under
+  // budget. Mirrors the weekly usage-pace sensor on the Claude/Gemini/Copilot
+  // usage integrations.
+  if (!window) return null;
+  const { used_percent: usedPercent, window_minutes: windowMinutes, reset_at: resetAt } =
+    window;
+  if (
+    !Number.isFinite(usedPercent) ||
+    !Number.isFinite(windowMinutes) ||
+    windowMinutes <= 0 ||
+    !resetAt
+  ) {
+    return null;
+  }
+
+  const windowSeconds = windowMinutes * 60;
+  const remainingSeconds = Number(resetAt) - Date.now() / 1000;
+  const elapsedSeconds = windowSeconds - remainingSeconds;
+  const percentElapsed = (elapsedSeconds / windowSeconds) * 100;
+
+  return Math.round((usedPercent - percentElapsed) * 10) / 10;
+}
+
 function normalizeLimitStatus(status) {
   if (!status || String(status).toLowerCase() === "unknown") return "OK";
   return status;
@@ -169,6 +194,7 @@ export function flattenForMqtt(snapshot) {
     secondary_reset_time: formatResetTime(snapshot.secondary?.reset_at),
     secondary_reset_after_seconds:
       snapshot.secondary?.reset_after_seconds ?? null,
+    secondary_usage_pace: computeUsagePace(snapshot.secondary),
     credits_has_credits: snapshot.credits?.has_credits ?? false,
     credits_unlimited: snapshot.credits?.unlimited ?? false,
     credits_balance: snapshot.credits?.balance ?? null,
